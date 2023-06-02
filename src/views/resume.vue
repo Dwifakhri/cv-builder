@@ -1,9 +1,11 @@
+<!-- eslint-disable no-unused-vars -->
 <script>
 import { Field, ErrorMessage, Form } from "vee-validate";
+import displayResume from "./displayResume.vue";
 
 export default {
   name: "resume-view",
-  components: { Field, ErrorMessage, Form },
+  components: { Field, ErrorMessage, Form, displayResume },
   data() {
     return {
       data: {
@@ -55,27 +57,34 @@ export default {
             description: "loremsdf",
           },
         ],
+        education: [
+          {
+            institution: "PT Astra Indo",
+            field: "Accountant",
+            start: "2014-07-12",
+            end: "2018-10-12",
+            description: "loremsdf",
+          },
+        ],
+        skills: ["data-entry"],
       },
-      skills: [],
-      skillSet: "",
-      experience: [],
-      companyName: "",
-      position: "",
-      startDate: "",
-      endDate: "",
-      description: "",
+      newSkill: "",
+      education: {
+        institution: "",
+        field: "",
+        startDate: "",
+        endDate: "",
+        description: "",
+      },
+      experience: {
+        companyName: "",
+        position: "",
+        startDate: "",
+        endDate: "",
+        description: "",
+      },
       newDataLocal: {},
     };
-  },
-  computed: {
-    isCompleted() {
-      return (
-        this.companyName &&
-        this.position &&
-        this.startDate &&
-        this.endDate & this.description
-      );
-    },
   },
   created() {
     this.setReactiveData();
@@ -96,27 +105,48 @@ export default {
         about: this.newDataLocal.about,
         link: this.newDataLocal.link,
         experience: this.newDataLocal.experience,
+        education: this.newDataLocal.education,
+        skills: this.newDataLocal.skills,
       };
       this.setToLocal(data);
     },
-    addExp() {
-      const exp = {
-        company: this.companyName,
-        position: this.position,
-        start: this.startDate,
-        end: this.endDate,
-        description: this.description,
+    addItem(context) {
+      const experience = {
+        company: this.experience.companyName,
+        position: this.experience.position,
+        start: this.experience.startDate,
+        end: this.experience.endDate,
+        description: this.experience.description,
       };
-      this.experience = this.experience.concat(exp);
+      const education = {
+        institution: this.education.institution,
+        field: this.education.field,
+        start: this.education.startDate,
+        end: this.education.endDate,
+        description: this.education.description,
+      };
+      const items = context === "experience" ? experience : education;
+      this.newDataLocal[context] = this.newDataLocal[context].concat(items);
       const newData = JSON.parse(localStorage.getItem("form"));
       const newMod = Object.assign({}, newData);
-      newMod.experience = this.experience;
+      newMod[context] = this.newDataLocal[context];
       this.setToLocal(newMod);
       this.setReactiveData();
     },
-    deleteExp(index) {
-      const deleteItem = this.experience.filter((i) => i !== index);
-      console.log(deleteItem);
+    addSkill() {
+      this.newDataLocal.skills = this.newDataLocal.skills.concat(this.newSkill);
+      const newData = JSON.parse(localStorage.getItem("form"));
+      const newMod = Object.assign({}, newData);
+      newMod.skills = this.newDataLocal.skills;
+      this.setToLocal(newMod);
+      this.setReactiveData();
+    },
+    deleteItem(context, i) {
+      const tempForm = JSON.parse(JSON.stringify(this.newDataLocal[context]));
+      const deleteItem = tempForm?.filter((item, index) => index !== i);
+      this.newDataLocal[context] = deleteItem;
+      this.setToLocal(this.newDataLocal);
+      this.setReactiveData();
     },
     resetData() {
       const temp = JSON.stringify(this.data);
@@ -336,7 +366,7 @@ export default {
                     class="form-control"
                     aria-labelledby="company"
                     placeholder="PT Example"
-                    v-model="companyName"
+                    v-model="experience.companyName"
                     rules="required"
                     validate-on-input
                   />
@@ -351,7 +381,7 @@ export default {
                       class="form-control"
                       aria-labelledby="position"
                       placeholder="Accountant"
-                      v-model="position"
+                      v-model="experience.position"
                       rules="required"
                       validate-on-input
                     />
@@ -367,7 +397,7 @@ export default {
                         type="date"
                         class="form-control date-control"
                         aria-labelledby="startdate"
-                        v-model="startDate"
+                        v-model="experience.startDate"
                         rules="required"
                         validate-on-input
                       />
@@ -382,7 +412,7 @@ export default {
                         type="date"
                         class="form-control date-control"
                         aria-labelledby="enddate"
-                        v-model="endDate"
+                        v-model="experience.endDate"
                         rules="required"
                         validate-on-input
                       />
@@ -400,7 +430,7 @@ export default {
                       class="form-control"
                       aria-labelledby="description"
                       placeholder="Lorem"
-                      v-model="description"
+                      v-model="experience.description"
                       rules="required"
                       validate-on-input
                     >
@@ -420,7 +450,7 @@ export default {
                     type="submit"
                     class="btn my-3 w-100"
                     style="font-size: 13px !important"
-                    @click.prevent="addExp"
+                    @click.prevent="addItem('experience')"
                     :disabled="!formMeta.valid"
                   >
                     Add
@@ -560,13 +590,324 @@ export default {
                           </div>
                         </div>
                         <i
-                          @click.prevent="deleteExp(i)"
+                          @click.prevent="deleteItem('experience', i)"
                           class="bi bi-trash-fill"
                         ></i>
                       </div>
                     </div>
                   </div>
                 </Form>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#education"
+                aria-expanded="false"
+                aria-controls="education"
+              >
+                EDUCATION
+              </button>
+            </h2>
+            <div id="education" class="accordion-collapse collapse">
+              <div class="accordion-body ps-2">
+                <Form v-slot="{ meta: formMeta }">
+                  <label for="company" class="form-label mb-1"
+                    >Institution Name</label
+                  >
+                  <Field
+                    name="institution"
+                    type="text"
+                    class="form-control"
+                    aria-labelledby="institution"
+                    placeholder="PT Example"
+                    v-model="education.institution"
+                    rules="required"
+                    validate-on-input
+                  />
+                  <ErrorMessage name="institution" class="error-message mt-2" />
+                  <div class="mt-2">
+                    <label for="position" class="form-label mb-1">Field</label>
+                    <Field
+                      name="field"
+                      type="text"
+                      class="form-control"
+                      aria-labelledby="field"
+                      placeholder="Accountant"
+                      v-model="education.field"
+                      rules="required"
+                      validate-on-input
+                    />
+                    <ErrorMessage name="field" class="error-message mt-2" />
+                  </div>
+                  <div class="d-flex justify-content-between mt-2">
+                    <div>
+                      <label for="startdate" class="form-label mb-1 d-flex"
+                        >Start Date</label
+                      >
+                      <Field
+                        name="startdate"
+                        type="date"
+                        class="form-control date-control"
+                        aria-labelledby="startdate"
+                        v-model="education.startDate"
+                        rules="required"
+                        validate-on-input
+                      />
+                      <ErrorMessage name="start date" class="error-message" />
+                    </div>
+                    <div>
+                      <label for="enddate" class="form-label mb-1 d-flex"
+                        >End Date</label
+                      >
+                      <Field
+                        name="end date"
+                        type="date"
+                        class="form-control date-control"
+                        aria-labelledby="enddate"
+                        v-model="education.endDate"
+                        rules="required"
+                        validate-on-input
+                      />
+                      <ErrorMessage name="end date" class="error-message" />
+                    </div>
+                  </div>
+                  <div class="mt-2 d-flex flex-column">
+                    <label for="description" class="form-label mb-1"
+                      >Description</label
+                    >
+                    <Field
+                      name="description"
+                      type="text"
+                      v-slot="{ field }"
+                      class="form-control"
+                      aria-labelledby="description"
+                      placeholder="Lorem"
+                      v-model="education.description"
+                      rules="required"
+                      validate-on-input
+                    >
+                      <textarea
+                        v-bind="field"
+                        name="description"
+                        cols="39"
+                        rows="6"
+                      ></textarea>
+                    </Field>
+                    <ErrorMessage
+                      name="description"
+                      class="error-message mt-2"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    class="btn my-3 w-100"
+                    style="font-size: 13px !important"
+                    @click.prevent="addItem('education')"
+                    :disabled="!formMeta.valid"
+                  >
+                    Add
+                  </button>
+                </Form>
+                <Form>
+                  <div
+                    v-for="(item, i) in newDataLocal.education"
+                    :key="i"
+                    class="mb-2"
+                  >
+                    <div class="accordion-item">
+                      <h2 class="accordion-header">
+                        <button
+                          class="accordion-button"
+                          type="button"
+                          data-bs-toggle="collapse"
+                          :data-bs-target="'#' + i"
+                          aria-expanded="false"
+                          :aria-controls="i"
+                        >
+                          {{ item.institution }}
+                        </button>
+                      </h2>
+                      <div
+                        :id="i"
+                        class="accordion-collapse collapse"
+                        :data-bs-parent="'#' + i"
+                      >
+                        <div class="accordion-body">
+                          <label
+                            :for="'institutionName' + i"
+                            class="form-label mb-1"
+                            >Institution Name</label
+                          >
+                          <Field
+                            :name="'institutionName' + i"
+                            type="text"
+                            class="form-control"
+                            :aria-labelledby="'institutionName' + i"
+                            :placeholder="item.institutionName"
+                            v-model="item.institutionName"
+                            rules="required"
+                            validate-on-input
+                          />
+                          <ErrorMessage
+                            :name="'institutionName' + i"
+                            class="error-message mt-2"
+                          />
+                          <div class="mt-2">
+                            <label for="field" class="form-label mb-1"
+                              >Field</label
+                            >
+                            <Field
+                              name="field"
+                              type="text"
+                              class="form-control"
+                              aria-labelledby="field"
+                              :placeholder="item.field"
+                              v-model="item.field"
+                              rules="required"
+                              validate-on-input
+                            />
+                            <ErrorMessage
+                              name="field"
+                              class="error-message mt-2"
+                            />
+                          </div>
+                          <div class="d-flex justify-content-between mt-2">
+                            <div>
+                              <label
+                                for="startdate"
+                                class="form-label mb-1 d-flex"
+                                >Start Date</label
+                              >
+                              <Field
+                                name="startdate"
+                                type="date"
+                                class="form-control date-control"
+                                aria-labelledby="startdate"
+                                :placeholder="item.start"
+                                v-model="item.start"
+                                rules="required"
+                                validate-on-input
+                              />
+                              <ErrorMessage
+                                name="start date"
+                                class="error-message"
+                              />
+                            </div>
+                            <div>
+                              <label
+                                for="enddate"
+                                class="form-label mb-1 d-flex"
+                                >End Date</label
+                              >
+                              <Field
+                                name="end date"
+                                type="date"
+                                class="form-control date-control"
+                                aria-labelledby="enddate"
+                                :placeholder="item.end"
+                                v-model="item.end"
+                                rules="required"
+                                validate-on-input
+                              />
+                              <ErrorMessage
+                                name="end date"
+                                class="error-message"
+                              />
+                            </div>
+                          </div>
+                          <div class="mt-2 d-flex flex-column">
+                            <label for="description" class="form-label mb-1"
+                              >Description</label
+                            >
+                            <Field
+                              name="description"
+                              type="text"
+                              v-slot="{ field }"
+                              class="form-control"
+                              aria-labelledby="description"
+                              :placeholder="item.description"
+                              v-model="item.description"
+                              rules="required"
+                              validate-on-input
+                            >
+                              <textarea
+                                v-bind="field"
+                                name="description"
+                                cols="39"
+                                rows="6"
+                              ></textarea>
+                            </Field>
+                            <ErrorMessage
+                              name="description"
+                              class="error-message mt-2"
+                            />
+                          </div>
+                        </div>
+                        <i
+                          @click.prevent="deleteItem('education', i)"
+                          class="bi bi-trash-fill"
+                        ></i>
+                      </div>
+                    </div>
+                  </div>
+                </Form>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#skill"
+                aria-expanded="false"
+                aria-controls="skill"
+              >
+                SKILL
+              </button>
+            </h2>
+            <div id="skill" class="accordion-collapse collapse">
+              <div class="accordion-body ps-2">
+                <Form v-slot="{ meta: formMeta }">
+                  <Field
+                    name="skill"
+                    type="text"
+                    class="form-control mt-2"
+                    placeholder="Data Entry"
+                    v-model="newSkill"
+                    rules="required"
+                    validate-on-input
+                  />
+                  <ErrorMessage name="skill" class="error-message mt-2" />
+                  <button
+                    type="submit"
+                    class="btn my-3 w-100"
+                    style="font-size: 13px !important"
+                    @click.prevent="addSkill"
+                    :disabled="!formMeta.valid"
+                  >
+                    Add
+                  </button>
+                </Form>
+                <div class="mt-1" style="display: inline-flex; flex-wrap: wrap">
+                  <div
+                    v-for="(item, i) in newDataLocal.skills"
+                    :key="i"
+                    class="skill"
+                  >
+                    <p class="mr-2">{{ item }}</p>
+                    <i
+                      @click.prevent="deleteItem('skills', i)"
+                      class="bi bi-x-circle"
+                    ></i>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -579,7 +920,7 @@ export default {
         <button class="btn" style="width: 100%">Download Resume</button>
       </div>
     </nav>
-    <main>sdsd</main>
+    <main><display-resume></display-resume></main>
   </div>
 </template>
 
@@ -660,5 +1001,21 @@ main {
 
 .date-control {
   width: 8rem;
+}
+
+.skill {
+  display: flex;
+  align-items: center;
+  background: white;
+  margin: 3px;
+  padding: 5px;
+  border-radius: 7px;
+  width: fit-content;
+
+  i {
+    margin-left: 3px;
+    font-size: 10px;
+    cursor: pointer;
+  }
 }
 </style>
