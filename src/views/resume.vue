@@ -67,6 +67,7 @@ export default {
           },
         ],
         skills: ["data-entry"],
+        avatar: null,
       },
       newSkill: "",
       education: {
@@ -107,6 +108,7 @@ export default {
         experience: this.newDataLocal.experience,
         education: this.newDataLocal.education,
         skills: this.newDataLocal.skills,
+        avatar: this.newDataLocal.avatar,
       };
       this.setToLocal(data);
     },
@@ -140,6 +142,19 @@ export default {
       newMod.skills = this.newDataLocal.skills;
       this.setToLocal(newMod);
       this.setReactiveData();
+    },
+    inputPhoto(e) {
+      const file = e.target.files[0];
+      const fr = new FileReader();
+      fr.readAsDataURL(file);
+      fr.onload = () => {
+        this.newDataLocal.avatar = fr.result;
+        const newData = JSON.parse(localStorage.getItem("form"));
+        const newMod = Object.assign({}, newData);
+        newMod.avatar = this.newDataLocal.avatar;
+        this.setToLocal(newMod);
+        this.setReactiveData();
+      };
     },
     deleteItem(context, i) {
       const tempForm = JSON.parse(JSON.stringify(this.newDataLocal[context]));
@@ -332,6 +347,44 @@ export default {
                               :name="item.form + ' url'"
                               class="error-message mt-2"
                             />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="accordion-item">
+                      <h2 class="accordion-header">
+                        <button
+                          class="accordion-button"
+                          type="button"
+                          data-bs-toggle="collapse"
+                          data-bs-target="#photo"
+                          aria-expanded="false"
+                          aria-controls="photo"
+                        >
+                          Photo
+                        </button>
+                      </h2>
+                      <div
+                        id="photo"
+                        class="accordion-collapse collapse"
+                        data-bs-parent="#photo"
+                      >
+                        <div class="accordion-body">
+                          <div class="mb-2">
+                            <label for="photo" class="form-label mb-1"
+                              >Upload Photo</label
+                            >
+                            <Field
+                              name="photo"
+                              type="file"
+                              class="form-control"
+                              accept="image/png"
+                              aria-labelledby="photo"
+                              placeholder="Accountant"
+                              validate-on-input
+                              @change="inputPhoto"
+                            />
+                            <ErrorMessage name="photo" class="error-message" />
                           </div>
                         </div>
                       </div>
@@ -920,7 +973,7 @@ export default {
         <button class="btn" style="width: 100%">Download Resume</button>
       </div>
     </nav>
-    <main><display-resume></display-resume></main>
+    <main><display-resume :newData="newDataLocal"></display-resume></main>
   </div>
 </template>
 
