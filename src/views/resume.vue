@@ -326,7 +326,6 @@ export default {
                               :aria-labelledby="item.form"
                               :placeholder="item.value"
                               v-model="item.value"
-                              rules="required"
                               validate-on-input
                             />
                             <ErrorMessage
@@ -340,7 +339,7 @@ export default {
                               :aria-labelledby="item.form"
                               :placeholder="item.url"
                               v-model="item.url"
-                              rules="required|url"
+                              rules="url"
                               validate-on-input
                             />
                             <ErrorMessage
